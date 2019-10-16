@@ -7,5 +7,5 @@ This is an engine in a docker for the Street Fighter Challenge that MAD_RL_ is l
 Clone the [challenge repository](https://github.com/mad-rl/sfii-challenge) and use the following command in order to use it.
 
 ```
-docker run -v $PWD/sfii_agent_base:/sfii-challenge/mad-rl-framework/agent -v $PWD/roms:/sfii-challenge/roms/ sfii_challenge_engine
+docker run -v $PWD/sfii_agent_base:/sfii-challenge/mad-rl-framework/src/sfii_agent -v $PWD/roms:/sfii-challenge/roms/ sfii_challenge_engine
 ```
