@@ -1,0 +1,16 @@
+FROM ubuntu:18.04
+
+WORKDIR .
+
+RUN apt update
+RUN apt -y install python3.7 python3-pip git python-opengl xvfb
+RUN python3.7 -m pip install torch torchvision gym-retro numpy Pillow
+
+COPY . .
+
+ENV ROM_PATH ./roms/
+ENV PYTHONPATH ./src/
+
+RUN chmod +x start.sh
+
+CMD [ "./start.sh" ]
