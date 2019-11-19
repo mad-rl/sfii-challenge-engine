@@ -10,6 +10,7 @@ COPY . .
 
 ENV ROM_PATH ./roms/
 ENV PYTHONPATH ./src/
+ENV GAME_FOLDER ./usr/local/lib/python3.7/dist-packages/retro/data/stable/StreetFighterIISpecialChampionEdition-Genesis/
 
 RUN chmod +x start.sh
 

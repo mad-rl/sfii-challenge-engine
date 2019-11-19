@@ -5,6 +5,8 @@ import numpy as np
 import retro
 import torch
 
+from shutil import copyfile
+
 from core.mad_rl import MAD_RL
 
 
@@ -24,7 +26,18 @@ class Engine:
         else:
             self.env = retro.make(game=game)
 
+        self.game_folder = self.engine_parameters['game_folder']
         self.game_character = self.engine_parameters['character']
+        self.load_state()
+
+    def load_state(self):
+        src_path = 'states/' + self.game_character + '.state'
+        dst_path = self.game_folder + self.game_character + '.state'
+        copyfile(src_path, dst_path)
+
+        filename = self.game_folder + "metadata.json"
+        with open(filename, "w") as f:
+            f.write('{"default_state": "' + self.game_character + '"}')
 
     def train(self, seed):
         torch.manual_seed(seed)
