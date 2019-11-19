@@ -16,6 +16,7 @@ ENGINE_PARAMETERS = {
     'num_processes': os.getenv("NUM_PROCESSES", 5),
     'output_models_path': os.getenv("OUTPUT_MODELS_PATH", "models"),
     'delay_frames': os.getenv("DELAY_FRAMES", 50),
+    'replay': os.getenv("REPLAY", False),
     'module': os.getenv("ENGINE_MODULE", "src.environments.gym_retro.engine"),
     'class': os.getenv("ENGINE_CLASS", "Engine")
 }
