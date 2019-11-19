@@ -155,5 +155,5 @@ class Engine:
 
         if self.replay:
             subprocess.run(
-                ['python3', '-m', 'retro.scripts.playback_movie',
+                ['python3.7', '-m', 'retro.scripts.playback_movie',
                  self.game_character + '-000000.bk2'])
