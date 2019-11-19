@@ -1,4 +1,5 @@
 import os
+import subprocess
 
 import numpy as np
 import retro
@@ -9,11 +10,21 @@ from core.mad_rl import MAD_RL
 
 class Engine:
     def __init__(self, engine_parameters, agent_parameters, shared_agent):
-        self.env = retro.make(os.getenv(
-            'GAME', 'StreetFighterIISpecialChampionEdition-Genesis'))
         self.agent_parameters = agent_parameters
         self.engine_parameters = engine_parameters
         self.shared_agent = shared_agent
+
+        game = os.getenv(
+            'GAME', 'StreetFighterIISpecialChampionEdition-Genesis')
+
+        self.replay = self.engine_parameters['replay']
+        testing_agent = int(self.engine_parameters['num_processes'])
+        if self.replay and testing_agent:
+            self.env = retro.make(game=game, record="./replays/")
+        else:
+            self.env = retro.make(game=game)
+
+        self.game_character = self.engine_parameters['character']
 
     def train(self, seed):
         torch.manual_seed(seed)
@@ -128,3 +139,8 @@ class Engine:
 
                     self.agent.end_step(step)
                 self.agent.end_episode(episode)
+
+        if self.replay:
+            subprocess.run(
+                ['python3', '-m', 'retro.scripts.playback_movie',
+                 self.game_character + '-000000.bk2'])
