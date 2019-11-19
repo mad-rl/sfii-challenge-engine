@@ -19,16 +19,16 @@ class Engine:
         game = os.getenv(
             'GAME', 'StreetFighterIISpecialChampionEdition-Genesis')
 
+        self.game_folder = self.engine_parameters['game_folder']
+        self.game_character = self.engine_parameters['character']
+        self.load_state()
+
         self.replay = self.engine_parameters['replay']
         testing_agent = int(self.engine_parameters['num_processes'])
         if self.replay and testing_agent:
             self.env = retro.make(game=game, record="./replays/")
         else:
             self.env = retro.make(game=game)
-
-        self.game_folder = self.engine_parameters['game_folder']
-        self.game_character = self.engine_parameters['character']
-        self.load_state()
 
     def load_state(self):
         src_path = 'states/' + self.game_character + '.state'
@@ -154,6 +154,10 @@ class Engine:
                 self.agent.end_episode(episode)
 
         if self.replay:
+            replay_path = (
+                "replays/StreetFighterIISpecialChampionEdition-Genesis-" +
+                self.game_character +
+                "-000000.bk2")
             subprocess.run(
                 ['python3.7', '-m', 'retro.scripts.playback_movie',
-                 self.game_character + '-000000.bk2'])
+                 replay_path])
