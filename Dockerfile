@@ -3,7 +3,7 @@ FROM ubuntu:18.04
 WORKDIR .
 
 RUN apt update
-RUN apt -y install python3.7 python3-pip git python-opengl xvfb
+RUN apt -y install python3.7 python3-pip git python-opengl xvfb ffmpeg
 RUN python3.7 -m pip install torch torchvision gym-retro numpy Pillow
 
 COPY . .
