@@ -5,6 +5,7 @@ import numpy as np
 import retro
 import torch
 
+from pathlib import Path
 from shutil import copyfile
 
 from core.mad_rl import MAD_RL
@@ -146,23 +147,29 @@ class Engine:
                         reward_sum = 0
                         episode_steps = 0
 
-                        self.env.reset()
-                        observation = self.env.render(mode='rgb_array')
+                        observation = env.render(mode='rgb_array')
 
                     next_state = self.agent.get_state(state, observation)
                     state = next_state
 
                     if game_finished:
+                        env.reset()
+
+                        if self.replay and episode % episode_replay == 0:
+                            replay_path = (
+                                "replays/StreetFighterIISpecialChampionEdition-Genesis-" +
+                                self.game_character +
+                                "-" + str(episode - 1).zfill(6) + ".bk2")  # index formed of 6 digits
+                            subprocess.run(
+                                ['python3.7', '-m', 'retro.scripts.playback_movie',
+                                 replay_path])
                         break
 
                     self.agent.end_step(step)
                 self.agent.end_episode(episode)
 
-        if self.replay:
-            replay_path = (
-                "replays/StreetFighterIISpecialChampionEdition-Genesis-" +
-                self.game_character +
-                "-000000.bk2")
-            subprocess.run(
-                ['python3.7', '-m', 'retro.scripts.playback_movie',
-                 replay_path])
+        # Remove .bk files
+        folder = Path('replays/')
+        files = folder.glob('*.bk2')
+        for f in files:
+            os.remove(f)
