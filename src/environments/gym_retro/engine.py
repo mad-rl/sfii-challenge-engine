@@ -16,19 +16,12 @@ class Engine:
         self.engine_parameters = engine_parameters
         self.shared_agent = shared_agent
 
-        game = os.getenv(
+        self.game = os.getenv(
             'GAME', 'StreetFighterIISpecialChampionEdition-Genesis')
 
         self.game_folder = self.engine_parameters['game_folder']
         self.game_character = self.engine_parameters['character']
         self.load_state()
-
-        self.replay = self.engine_parameters['replay']
-        testing_agent = int(self.engine_parameters['num_processes'])
-        if self.replay and testing_agent:
-            self.env = retro.make(game=game, record="./replays/")
-        else:
-            self.env = retro.make(game=game)
 
     def load_state(self):
         src_path = 'states/' + self.game_character + '.state'
@@ -88,12 +81,24 @@ class Engine:
 
     def test(self, seed):
         torch.manual_seed(seed)
+
+        self.replay = self.engine_parameters['replay']
+        if self.replay:
+            env = retro.make(game=self.game, record="./replays/")
+            episodes_testing = int(self.engine_parameters['episodes_testing'])
+            episode_replay = int(episodes_testing / 10)
+            if episodes_testing < 10:
+                episode_replay = 1
+        else:
+            env = retro.make(game=self.game)
+
         self.agent = MAD_RL.agent(self.agent_parameters)
         self.agent.initialize_optimizer(self.shared_agent)
         self.agent.get_model().eval()
 
         # First state
-        observation = self.env.render(mode='rgb_array')
+        env.reset()
+        observation = env.render(mode='rgb_array')
         state = self.agent.get_state(None, observation)
 
         rewards = []
