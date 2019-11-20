@@ -41,18 +41,20 @@ class Engine:
 
     def train(self, seed):
         torch.manual_seed(seed)
+
+        env = retro.make(game=self.game)
         self.agent = MAD_RL.agent(self.agent_parameters)
         self.agent.initialize_optimizer(self.shared_agent)
         self.agent.get_model().train()
 
         # First state
-        observation = self.env.render(mode='rgb_array')
+        observation = env.render(mode='rgb_array')
         state = self.agent.get_state(None, observation)
 
         episodes = self.engine_parameters['episodes_training']
         for episode in range(int(episodes)):
             game_finished = False
-            self.env.reset()
+            env.reset()
 
             self.agent.start_episode(episode)
             while not game_finished:
@@ -63,12 +65,12 @@ class Engine:
                 for step in range(self.engine_parameters['delay_frames']):
                     self.agent.start_step(step)
 
-                    observation, reward, game_finished, info = self.env.step(
+                    observation, reward, game_finished, info = env.step(
                         action)
 
                     if game_finished:
-                        self.env.reset()
-                        observation = self.env.render(mode='rgb_array')
+                        env.reset()
+                        observation = env.render(mode='rgb_array')
 
                     next_state = self.agent.get_state(state, observation)
                     self.agent.add_experience(
@@ -104,9 +106,7 @@ class Engine:
         for episode in range(int(episodes)):
             # Sync with the shared model
             self.agent.load_model(self.shared_agent.get_model())
-
             game_finished = False
-            self.env.reset()
 
             self.agent.start_episode(episode)
             while not game_finished:
@@ -115,7 +115,7 @@ class Engine:
                 for step in range(self.engine_parameters['delay_frames']):
                     self.agent.start_step(step)
 
-                    observation, reward, game_finished, info = self.env.step(
+                    observation, reward, game_finished, info = env.step(
                         action)
 
                     rewards.append(reward)
