@@ -17,6 +17,7 @@ ENGINE_PARAMETERS = {
     'output_models_path': os.getenv("OUTPUT_MODELS_PATH", "models"),
     'delay_frames': os.getenv("DELAY_FRAMES", 50),
     'game_folder': os.getenv("GAME_FOLDER", None),
+    'load_model': os.getenv("LOAD_MODEL", False),
     'character': os.getenv("CHARACTER", 'ryu'),
     'module': os.getenv("ENGINE_MODULE", "src.environments.gym_retro.engine"),
     'class': os.getenv("ENGINE_CLASS", "Engine")
@@ -44,6 +45,10 @@ if __name__ == '__main__':
     torch.manual_seed(42)
 
     shared_agent = MAD_RL.agent(AGENT_PARAMETERS)
+    if ENGINE_PARAMETERS['load_model']:
+        model_path = AGENT_PARAMETERS['start_from_model']
+        shared_agent.load_model_from_path(model_path)
+        print("Model checkpoint loaded from ", model_path)
     shared_agent.get_model().share_memory()
 
     num_processes = int(ENGINE_PARAMETERS['num_processes'])
