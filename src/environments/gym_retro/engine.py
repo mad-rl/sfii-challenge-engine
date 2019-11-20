@@ -157,12 +157,17 @@ class Engine:
 
                         if self.replay and episode % episode_replay == 0:
                             replay_path = (
-                                "replays/StreetFighterIISpecialChampionEdition-Genesis-" +
+                                "replays/" +
+                                "StreetFighterIISpecialChampionEdition-" +
+                                "Genesis-" +
                                 self.game_character +
                                 "-" + str(episode - 1).zfill(6) + ".bk2")  # index formed of 6 digits
                             subprocess.run(
-                                ['python3.7', '-m', 'retro.scripts.playback_movie',
-                                 replay_path])
+                                ['python3.7', '-m',
+                                 'retro.scripts.playback_movie',
+                                 replay_path],
+                                stdout=open(os.devnull, 'w'),
+                                stderr=subprocess.STDOUT)
                         break
 
                     self.agent.end_step(step)
