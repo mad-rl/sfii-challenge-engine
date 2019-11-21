@@ -1,9 +1,11 @@
 import os
+import subprocess
 
 import numpy as np
 import retro
 import torch
 
+from pathlib import Path
 from shutil import copyfile
 
 from core.mad_rl import MAD_RL
@@ -11,11 +13,12 @@ from core.mad_rl import MAD_RL
 
 class Engine:
     def __init__(self, engine_parameters, agent_parameters, shared_agent):
-        self.env = retro.make(os.getenv(
-            'GAME', 'StreetFighterIISpecialChampionEdition-Genesis'))
         self.agent_parameters = agent_parameters
         self.engine_parameters = engine_parameters
         self.shared_agent = shared_agent
+
+        self.game = os.getenv(
+            'GAME', 'StreetFighterIISpecialChampionEdition-Genesis')
 
         self.game_folder = self.engine_parameters['game_folder']
         self.game_character = self.engine_parameters['character']
@@ -32,18 +35,20 @@ class Engine:
 
     def train(self, seed):
         torch.manual_seed(seed)
+
+        env = retro.make(game=self.game)
         self.agent = MAD_RL.agent(self.agent_parameters)
         self.agent.initialize_optimizer(self.shared_agent)
         self.agent.get_model().train()
 
         # First state
-        observation = self.env.render(mode='rgb_array')
+        observation = env.render(mode='rgb_array')
         state = self.agent.get_state(None, observation)
 
         episodes = self.engine_parameters['episodes_training']
         for episode in range(int(episodes)):
             game_finished = False
-            self.env.reset()
+            env.reset()
 
             self.agent.start_episode(episode)
             while not game_finished:
@@ -54,12 +59,12 @@ class Engine:
                 for step in range(self.engine_parameters['delay_frames']):
                     self.agent.start_step(step)
 
-                    observation, reward, game_finished, info = self.env.step(
+                    observation, reward, game_finished, info = env.step(
                         action)
 
                     if game_finished:
-                        self.env.reset()
-                        observation = self.env.render(mode='rgb_array')
+                        env.reset()
+                        observation = env.render(mode='rgb_array')
 
                     next_state = self.agent.get_state(state, observation)
                     self.agent.add_experience(
@@ -77,12 +82,24 @@ class Engine:
 
     def test(self, seed):
         torch.manual_seed(seed)
+
+        self.replay = self.engine_parameters['replay']
+        if self.replay:
+            env = retro.make(game=self.game, record="./replays/")
+            episodes_testing = int(self.engine_parameters['episodes_testing'])
+            episode_replay = int(episodes_testing / 10)
+            if episodes_testing < 10:
+                episode_replay = 1
+        else:
+            env = retro.make(game=self.game)
+
         self.agent = MAD_RL.agent(self.agent_parameters)
         self.agent.initialize_optimizer(self.shared_agent)
         self.agent.get_model().eval()
 
         # First state
-        observation = self.env.render(mode='rgb_array')
+        env.reset()
+        observation = env.render(mode='rgb_array')
         state = self.agent.get_state(None, observation)
 
         rewards = []
@@ -95,9 +112,7 @@ class Engine:
         for episode in range(int(episodes)):
             # Sync with the shared model
             self.agent.load_model(self.shared_agent.get_model())
-
             game_finished = False
-            self.env.reset()
 
             self.agent.start_episode(episode)
             while not game_finished:
@@ -106,7 +121,7 @@ class Engine:
                 for step in range(self.engine_parameters['delay_frames']):
                     self.agent.start_step(step)
 
-                    observation, reward, game_finished, info = self.env.step(
+                    observation, reward, game_finished, info = env.step(
                         action)
 
                     rewards.append(reward)
@@ -132,14 +147,34 @@ class Engine:
                         reward_sum = 0
                         episode_steps = 0
 
-                        self.env.reset()
-                        observation = self.env.render(mode='rgb_array')
+                        observation = env.render(mode='rgb_array')
 
                     next_state = self.agent.get_state(state, observation)
                     state = next_state
 
                     if game_finished:
+                        env.reset()
+
+                        if self.replay and episode % episode_replay == 0:
+                            replay_path = (
+                                "replays/" +
+                                "StreetFighterIISpecialChampionEdition-" +
+                                "Genesis-" +
+                                self.game_character +
+                                "-" + str(episode - 1).zfill(6) + ".bk2")  # index formed of 6 digits
+                            subprocess.run(
+                                ['python3.7', '-m',
+                                 'retro.scripts.playback_movie',
+                                 replay_path],
+                                stdout=open(os.devnull, 'w'),
+                                stderr=subprocess.STDOUT)
                         break
 
                     self.agent.end_step(step)
                 self.agent.end_episode(episode)
+
+        # Remove .bk files
+        folder = Path('replays/')
+        files = folder.glob('*.bk2')
+        for f in files:
+            os.remove(f)
