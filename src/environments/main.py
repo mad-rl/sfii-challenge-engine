@@ -34,6 +34,7 @@ AGENT_PARAMETERS = {
     'screen_width': 200,
     'width': 80,
     'height': 80,
+    'seed': 42,
     'start_from_model': os.getenv("START_FROM_MODEL", "models/sf2_a3c.pth"),
     'module': os.getenv("AGENT_MODULE",
                         "src.environments.gym_retro.my_agent.agent"),
@@ -43,7 +44,7 @@ AGENT_PARAMETERS = {
 print("Agent parameters: ", AGENT_PARAMETERS)
 
 if __name__ == '__main__':
-    torch.manual_seed(42)
+    torch.manual_seed(AGENT_PARAMETERS['seed'])
 
     shared_agent = MAD_RL.agent(AGENT_PARAMETERS)
     if ENGINE_PARAMETERS['load_model']:

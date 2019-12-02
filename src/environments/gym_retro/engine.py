@@ -37,19 +37,19 @@ class Engine:
         torch.manual_seed(seed)
 
         env = retro.make(game=self.game)
+        self.agent_parameters['seed'] = seed
         self.agent = MAD_RL.agent(self.agent_parameters)
         self.agent.initialize_optimizer(self.shared_agent)
         self.agent.get_model().train()
 
         # First state
+        env.reset()
         observation = env.render(mode='rgb_array')
         state = self.agent.get_state(None, observation)
 
         episodes = self.engine_parameters['episodes_training']
         for episode in range(int(episodes)):
             game_finished = False
-            env.reset()
-
             self.agent.start_episode(episode)
             while not game_finished:
                 # Sync with the shared model
