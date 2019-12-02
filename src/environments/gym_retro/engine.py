@@ -78,7 +78,7 @@ class Engine:
                     self.agent.end_step(step)
 
                 self.agent.train(game_finished, self.shared_agent)
-                self.agent.end_episode(episode)
+            self.agent.end_episode(episode)
 
     def test(self, seed):
         torch.manual_seed(seed)
@@ -94,7 +94,6 @@ class Engine:
             env = retro.make(game=self.game)
 
         self.agent = MAD_RL.agent(self.agent_parameters)
-        self.agent.initialize_optimizer(self.shared_agent)
         self.agent.get_model().eval()
 
         # First state
@@ -170,8 +169,8 @@ class Engine:
                                 stderr=subprocess.STDOUT)
                         break
 
-                    self.agent.end_step(step)
-                self.agent.end_episode(episode)
+                self.agent.end_step(step)
+            self.agent.end_episode(episode)
 
         # Remove .bk files
         folder = Path('replays/')
